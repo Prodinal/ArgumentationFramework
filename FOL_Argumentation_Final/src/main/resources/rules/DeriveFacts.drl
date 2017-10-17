@@ -1,0 +1,151 @@
+//created on: 18-May-2016
+package engine
+dialect "java"
+import java.util.ArrayList;
+import java.util.List;
+
+rule "Test getVariables"
+	when
+		i:Fact()
+		j:Expression()
+	then
+		i.getVariables();
+		j.getVariables();
+end
+
+rule "Test defeasible"
+	when
+		exists Argument(defeasible==false)
+	then
+		//System.out.println("Defeasible arg exists");
+end
+rule "Test forall"
+	when
+		$arg:Argument(defeasible==false)
+		forall( $exp:Expression(this memberOf $arg.premises)
+        		Fact( equalFunctions($exp), !oppositeSignum($exp))
+        	   )
+	then
+		//System.out.println("There is a defeasible arg, each of whose premises has a substitutable fact");
+end
+rule "Test accumulate"
+	when
+		$arg:Argument(defeasible==false)
+		list:List() from accumulate ($fact:Fact(hasPair($arg.premises)),collectList($fact))
+	then
+		//System.out.println("Collected list of arguments that might be substituted for arg");
+		ArrayList<Fact> myList=new ArrayList<>();
+		for(Object i:list){
+			myList.add((Fact) i);
+		}
+		ArrayList<Fact> myList2=new ArrayList<>();
+		myList2.addAll(list);
+		for(Fact i:myList2){
+			//System.out.println(i.getExp());
+		}
+end
+
+rule "Derive facts from defeasible or true arguments"
+	when
+		$arg:Argument(defeasible==false || connectionState!=Argument.FALSE)
+		forall( $exp:Expression(this memberOf $arg.premises)
+        		Fact( equalFunctions($exp), !oppositeSignum($exp))		//instead of equalFunctions, used to be substitutable($exp)
+        	   )
+       	list:List() from accumulate ($fact:Fact(hasPair($arg.premises), getSourceId()!=$arg.getId()),	//the id restriction is necessary, so it cant cause a loop by itself, longer circles are still posible :(
+       										collectList($fact)
+       										)
+
+       	$Conclusion : Expression(this memberOf $arg.conclusions)
+       	not Fact(equalFunctions($Conclusion), sourceId == $Conclusion.getSourceID())		//there is a conclusion which doesnt already exist
+	then
+		ArrayList<Fact> substitutableFacts=new ArrayList<Fact>();
+		for(Object i:list){
+			substitutableFacts.add((Fact)i);
+		}
+		System.out.println("Expression that doesnt already exist: " + $Conclusion.getExp() + " id: " + $Conclusion.getSourceID());
+		System.out.println("");
+		System.out.println("Argument which can be substituted exists");
+		System.out.println("Argument: " + $arg.getId() + ". " + $arg.getName());
+		System.out.println("Supporting facts:");
+		for(Fact i:substitutableFacts){
+			System.out.println(i.getSourceId() + ". " + i.getExp());
+		}
+		System.out.println("");
+		
+		//System.out.println("Before huge loop");
+		VariableSubstitutePairHolder holder=new VariableSubstitutePairHolder();
+		for(Expression i:$arg.getPremises()){
+			for(Fact j:substitutableFacts){
+				System.out.println("Checking function " + i.getFunction() + " against " + j.getFunction());
+				if(!j.equalFunctions(i)){System.out.println("Functions not equal: " + i.getFunction() + " " + j.getFunction());}
+				if(j.equalFunctions(i)){
+					System.out.println("Equal function: " + i.getFunction());
+					for(int k=0;k<i.getVariables().size();k++){
+						if(holder.holds(i.getVariables().get(k))){		//something has already been substituted
+							if(!j.getVariables().get(k).universal()){	//the variable of the fact is not universal, if it is then nothing has to be done	
+								if(holder.get(i.getVariables().get(k)).concrete()&&!j.getVariables().get(k).equals(holder.get(i.getVariables().get(k)))){
+									return; //both are concrete, and not the same
+								} else {
+									if(holder.get(i.getVariables().get(k)).universal()){		//variable of expression is universal
+										holder.put(i.getVariables().get(k), j.getVariables().get(k));	//replace its pair
+										System.out.println("Replaced old substitution (name changes): " + i.getVariables().get(k) + " to " + j.getVariables().get(k));
+									}
+								}
+							}
+						} else {		//works from here
+							if(j.getVariables().get(k).universal() || j.getVariables().get(k).equals(i.getVariables().get(k))){
+								holder.put(i.getVariables().get(k), i.getVariables().get(k));
+								System.out.println("Inserted new substitution (name remains): " + i.getVariables().get(k) + " to " + i.getVariables().get(k));
+							} else {
+								if(i.getVariables().get(k).concrete()){
+									System.out.println("Returning, fact cannot be applied to rule");
+									return;
+								} else {
+									holder.put(i.getVariables().get(k), j.getVariables().get(k));
+									System.out.println("Inserted new substitution (name changes): " + i.getVariables().get(k) + " to " + i.getVariables().get(k));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		System.out.println("");
+		//System.out.println("I still work");
+		for(Expression i:$arg.getConclusions()){		//every conclusion
+			Expression result=i;
+			for(Variable j:i.getVariables()){			//every variable of conclusion
+				if(holder.holds(j)){					//if substitution exists
+					result=result.substituteAndCreate(j, holder.get(j));	//then replace current variable with the one stored
+				}
+			}
+			Fact tmp=new Fact(result, result.getSourceID());
+			insert(tmp);
+			System.out.println("Derived fact: " + tmp.getSourceId() + ". " + tmp);
+		}
+		if(!$arg.getDefeasible()){		//if argument is not defeasible
+			$arg.setPremiseState(Argument.TRUE);	//if we have reached this far, then all of the argument's premises are true
+		}
+		System.out.println("Done");
+end
+
+/*rule "DEBUG Derive facts from defeasible or true arguments"
+	when
+		$arg:Argument(defeasible==false || connectionState!=Argument.FALSE)
+		forall( $exp:Expression(this memberOf $arg.premises)
+        		Fact( equalFunctions($exp), !oppositeSignum($exp))		//instead of equalFunctions, used to be substitutable($exp)
+        	   )
+       	list:List() from accumulate ($fact:Fact(hasPair($arg.premises), getSourceId()!=$arg.getId()),	//the id restriction is necessary, so it cant cause a loop by itself, longer circles are still posible :(
+       										collectList($fact)
+       										)
+       	//not (forall( $expNotAlreadyExisting:Expression(this memberOf $arg.conclusions)	//make sure at least one conclusion Fact is new
+        //		Fact( equalExpressions($expNotAlreadyExisting))
+       	//		))
+       	$Conclusion : Expression(this memberOf $arg.conclusions)
+       	$same : Fact(equalFunctions($Conclusion), sourceId == $Conclusion.getSourceID())		//there is a conclusion which doesnt already exist
+	then
+		System.out.println("Found fact that is the same as a conclusion:");
+		System.out.println("Expression: " + $Conclusion.getExp() + " id: " + $Conclusion.getSourceID());
+		System.out.println("Fact: " + $same.getExp() + " id: " + $same.getSourceId());
+end*/

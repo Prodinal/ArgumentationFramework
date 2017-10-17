@@ -1,0 +1,43 @@
+//created on: 2016.05.15.
+package engine
+
+rule "hello"
+	when
+	then
+		System.out.println("Hello world");
+end
+
+	
+rule "premise attacked when conclusion of other, true argument - exactly equal"
+	when
+		//attacker:Argument(conclusions contains attacked:Expression(), conclusionState==Argument.TRUE,
+		// 		 target:Argument(premises contains attacked))
+		defender:Argument(premiseState!=Argument.FALSE)
+		attacker:Argument(conclusionState==Argument.TRUE)
+		exp1:Expression(this memberOf defender.premises)
+		exp2:Expression(this memberOf attacker.conclusions, equalExpressions(exp1), oppositeSignum(exp1)) 
+	then
+		System.out.println("Premise of " + defender.getName() + " attacked succesfully.");
+		System.out.println("Premise: " + exp1.getExp());
+		System.out.println("Attacker: " + attacker.getName()); 
+		defender.setPremiseState(Argument.FALSE);
+		update(defender);
+end
+
+rule "premise attacked when conclusion of other, true argument - substituted"	//TODO
+	when
+		defender:Argument(premiseState!=Argument.FALSE)
+		attacker:Argument(conclusionState==Argument.TRUE)
+		exp1:Expression(this memberOf attacker.conclusions)
+		exp2:Expression(this memberOf defender.premises, equalFunctions(exp1))
+		varAtk:Variable(this memberOf exp1.variables)		//attacker statement has at leason one universal variable
+		varDef:Variable(this memberOf exp2.variables)										//defender has at least one variable (so it can be substituted)
+	then
+		System.out.println("Substituted variable, succesful attack");
+		System.out.println("Premise of " + defender.getName() + " attacked succesfully.");
+		System.out.println("Premise attacked: " + exp2.getExp());
+		System.out.println("Attacker name: " + attacker.getName());
+		System.out.println("Attacking conclusion: " + exp1.getExp());
+		defender.setPremiseState(Argument.FALSE);
+		update(defender);
+end

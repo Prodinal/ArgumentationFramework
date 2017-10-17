@@ -1,0 +1,47 @@
+//created on: 21-May-2016
+package engine
+
+//list any import classes here.
+
+
+
+//declare any global variables here
+
+
+
+/*rule "Derp"
+	when
+		arg:Argument(defeasible)
+        remove:Fact(sourceId==arg.id)
+        $exp:Expression(this memberOf arg.premises)				//there is a premise
+        attacker:Fact(equalFunctions($exp), substitutable($exp), oppositeSignum($exp))
+	then
+		System.out.println("Defeasible argument, with an already inserted fact exists.");
+		System.out.println("Argument: " + arg.getName());
+		System.out.println("Fact already inserted: " + remove.getExp());
+		System.out.println("Attacker: " + attacker.getExp());
+end*/
+
+rule "Premises of argument no longer stand"
+	salience 100
+    when
+        arg:Argument(defeasible)
+        remove:Fact(sourceId==arg.id)
+        $exp:Expression(this memberOf arg.premises)				//there is a premise
+        attacker:Fact(equalFunctions($exp), oppositeSignum($exp), substitutable($exp))		//which has a conflicting fact
+    then
+        System.out.println("Fact removed, because " + attacker.getExp() + " attacked one of \"" + arg.getName() + "\"'s premises: " + $exp.getExp());
+        retract(remove);
+end
+
+rule "Premise non-defeasible fact removed"
+	salience 100
+	when
+		arg:Argument()
+		remove:Fact(sourceId == arg.id)
+		$exp:Expression(this memberOf arg.premises)
+		not f:Fact(substitutable($exp))
+	then
+		System.out.println("Fact removed because " + $exp.getExp() + " is no longer present");
+		retract(remove);
+end

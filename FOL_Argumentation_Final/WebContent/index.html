@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>RESTful test</title>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" >
+	function addHandlers() {
+		var domain = "/alma";
+		$("#get-text").click(function (e) {
+			var value = $("#get-textfield").val();  
+			
+			jQuery.ajax({
+		        'type': 'GET',
+		        'url': domain+"/rest/test/echo?text="+value,
+		        'dataType': 'text',
+		    })
+		    .fail(function(data) { alert(data.status +" : "+ data.responseText); })
+		    .done(function(data) { $("#content").text(data); });
+		});
+
+		$("#get-json").click(function (e) {
+			jQuery.ajax({
+		        'type': 'GET',
+		        'url': domain+"/rest/test/json",
+		        'dataType': 'json',
+		    })
+		    .fail(function(data) { alert(data.status +" : "+ data.responseText); })
+		    .done(function(data) { $("#content").text(JSON.stringify(data)); });
+		});
+
+		$("#post-json").click(function (e) {
+			var data = JSON.stringify(
+				{
+					"name":"Peter",
+					"birth":1478110138887,
+					"address":{"zipCode":1500,"street":"Main","house":10},
+					"children":[]
+				}
+			);
+			jQuery.ajax({
+		        'type': 'POST',
+		        'url': domain+"/rest/test/json",
+		        'data': data,
+		        'contentType': 'application/json',
+		        'dataType': 'text',
+		    })
+		    .fail(function(data) { alert(data.status +" : "+ data.responseText); })
+		    .done(function(data) { $("#content").text(JSON.stringify(data)); });
+		});
+
+		$("#delete").click(function (e) {
+			var value = $("#delete-textfield").val();  
+			
+			jQuery.ajax({
+		        'type': 'DELETE',
+		        'url': domain+"/rest/test/delete?name="+value,
+		        'dataType': 'text',
+		    })
+		    .fail(function(data) { alert(data.status +" : "+ data.responseText); })
+		    .done(function(data) { $("#content").text(data); });
+		});
+	}
+</script>
+</head>
+<body onload="javascript:addHandlers()">
+<label>Kérés:</label>
+<div id="menu">
+	<!--<input type="text" id="get-textfield" value="Sample"/>
+	<input type="button" id="get-text" value="GET szöveg"/><br />
+	<input type="button" id="get-json" value="GET json"/><br />
+	<input type="button" id="post-json" value="POST json"/><br />
+	<input type="text" id="delete-textfield" value=""/>
+	<input type="button" id="delete" value="DELETE"/><br />-->
+</div>
+<label>Almafa</label>
+<label>Válasz:</label>
+<div id="content"></div>
+</body>
+</html>

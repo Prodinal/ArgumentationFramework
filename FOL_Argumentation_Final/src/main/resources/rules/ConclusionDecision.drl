@@ -1,0 +1,36 @@
+package engine
+
+//everything is salience -10, for these are to be executed late
+
+rule "Conclusion true"
+	salience -10
+	when
+		//premises and connection are not false, conclusion is not true
+		decide:Argument(defeasible==true, premiseState!=Argument.FALSE, connectionState!=Argument.FALSE, conclusionState!=Argument.TRUE)
+	then
+		decide.setConclusionState(Argument.TRUE);
+		System.out.println(decide.getName() + " marked true (premises and connection both true)");
+		update(decide);
+end
+
+rule "Conclusion False, source: defeated connection"
+	salience -10
+	when
+		//premises false, conclusion true
+		decide:Argument(defeasible==true, connectionState==Argument.FALSE, conclusionState!=Argument.FALSE)
+	then
+		decide.setConclusionState(Argument.FALSE);
+		System.out.println(decide.getName() + " marked false (connection not true)");
+		update(decide);
+end
+
+rule "Conclusion False, source: false premises"
+	salience -10
+	when
+		//premises false, conclusion true
+		decide:Argument(defeasible==true, premiseState==Argument.FALSE, conclusionState!=Argument.FALSE)
+	then
+		decide.setConclusionState(Argument.FALSE);
+		System.out.println(decide.getName() + " marked false (premises not true)");
+		update(decide);
+end

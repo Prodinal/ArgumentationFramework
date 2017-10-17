@@ -1,0 +1,55 @@
+//created on: 23-May-2016
+package engine
+
+import engine.Controller.removeFact
+
+rule "Remove Selected Fact"
+    when
+    	f:Fact()
+        rem:removeFact(exp.equals(f.getExp()))
+    then
+        System.out.println("Removing fact from knowledgeBase: " + f.getExp());
+        retract(f);
+        retract(rem);
+end
+
+rule "Remove Unmatched removeFact"
+	when
+		//not f:Fact()
+		//rem:removeFact(exp.equals(f.getExp()))
+		rem:removeFact()
+		not f:Fact(getExp().equals(rem.getExp()))
+	then
+		System.out.println("Removing removeFact: " + rem.getExp() + " no matching argument");
+		retract(rem);
+end
+
+rule "Collect to print: facts"
+	salience -1000				//definetely last operation
+	when
+		c:Controller()
+		f:Fact(!defeasible)
+	then
+		System.out.println("Fact added to list: " + f.getExp());
+		c.addFact(f.getExp());
+end
+
+rule "Collect to print: arguments"
+	salience -1000			//definetely last operation
+	when
+		c:Controller()
+		a:Argument()
+	then
+		System.out.println("Argument added to list: " + a.getName());
+		c.addArgument(a.getName());
+end
+
+rule "Collect to print: results"
+	salience -1000				//definetely last operation
+	when
+		c:Controller()
+		f:Fact(defeasible)		//defeasible facts are results of deduction
+	then
+		System.out.println("Result added to list: " + f.getExp());
+		c.addResult(f.getExp());
+end

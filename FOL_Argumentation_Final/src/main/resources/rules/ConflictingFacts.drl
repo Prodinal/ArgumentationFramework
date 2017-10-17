@@ -1,0 +1,88 @@
+//created on: 21-May-2016
+package engine
+import java.util.List;
+//list any import classes here.
+
+
+
+//declare any global variables here
+
+/*rule "Hello"
+	when
+	then
+		System.out.println("Hello from conflictingFacts");
+end*/
+
+
+/*rule "Your First Rule"
+	salience 100
+    when
+        examined:Fact(!defeasible())
+        arg:Argument(id==examined.sourceId)
+        listPro:List() from accumulate($tmpFact1:Fact(substitutable(examined), !oppositeSignum(examined)),collectList($tmpFact1))
+        listCon:List() from accumulate($tmpFact2:Fact(substitutable(examined), oppositeSignum(examined)),collectList($tmpFact2))
+    then
+        //TODO
+
+end*/
+
+/*rule "defeasible exists"
+	when
+		examined:Fact(!defeasible())
+	then
+		System.out.println("Defeasible exists");
+end
+
+rule "derp1"
+	when
+		examined:Fact(!defeasible())
+		conflict:Fact(defeasible())
+	then
+		System.out.println("Defeasible and non-defeasible exists: ");
+		System.out.println(examined.getSourceId() + ". " + examined + " isPlus=" + examined.isPlus());
+		System.out.println("conflicting: " + conflict.getSourceId() + ". " + conflict + "isPlus=" + conflict.isPlus());
+		System.out.println("equalsExpression");
+end
+
+rule "derp2"
+	when
+		examined:Fact(!defeasible())
+		conflict:Fact(defeasible(), equalFunctions(examined))
+	then
+		System.out.println("Defeasible and non-defeasible equalFunctions exists: ");
+		System.out.println(examined.getSourceId() + ". " + examined + " isPlus=" + examined.isPlus());
+		System.out.println("conflicting: " + conflict.getSourceId() + ". " + conflict + "isPlus=" + conflict.isPlus());
+		System.out.println("");
+end
+
+rule "herp"
+	when
+		examined:Fact(!defeasible())
+		conflict:Fact(defeasible(), equalFunctions(examined), oppositeSignum(examined))
+	then
+		System.out.println("Defeasible and non-defeasible equalexpression, oppositeSignum exists: ");
+		System.out.println(examined.getSourceId() + ". " + examined + ", and conflicting: " + conflict.getSourceId() + ". " + conflict);
+end
+
+*/
+
+rule "When conflicting with defeasable fact"
+    salience 100		//remove conflicting facts ASAP
+    when
+        examined:Fact(!defeasible())
+        conflict:Fact(defeasible(), equalFunctions(examined), substitutable(examined), oppositeSignum(examined))
+    then
+        System.out.println("Defeasible fact: " + examined.getExp() + " conflicting with non-defeasible fact: " + conflict.getExp());
+        System.out.println("Removing: " + examined.getSourceId() + ". " + examined.getExp());
+        retract(examined);
+end
+
+/*rule "When same fact already exists in working memory"
+	salience -10		//remove once all facts are derived already
+	when
+		fact1:Fact()
+		fact2:Fact(toString().equals(fact1.toString()), getSourceId() == fact1.getSourceId(), fact1!=this)	//same expression, same source, different object
+	then
+		System.out.println("Removing fact because " + fact1.getExpression() + "is equal to " + fact2.getExpression() + " and their sourceId is the same: " + fact1.getSourceId() + " " + fact2.getSourceId());
+		retract(fact2);
+end*/

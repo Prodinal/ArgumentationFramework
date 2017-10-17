@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>ArgumentationModel</groupId>
+  <artifactId>ArgumentationModel</artifactId>
+  <version>1.0.0-FINAL</version>
+  <packaging>war</packaging>
+  
+  	<properties>
+		<rdf4j.version>2.0.2</rdf4j.version>
+		<project.build.sourceDirectory>src/main/java</project.build.sourceDirectory>
+		<project.build.resourceDirectory>src/main/resources</project.build.resourceDirectory>
+		<webAppDirectory>${project.build.directory}/${project.build.finalName}</webAppDirectory>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<jersey.version>1.8</jersey.version>
+		<javaVersion>1.8</javaVersion>
+		<jetty.version>9.1.5.v20140505</jetty.version>
+		<jackson.version>1.9.6</jackson.version>
+		<guice.version>3.0</guice.version>
+	</properties>
+	<build>
+		<resources>
+			<resource>
+				<directory>${project.build.sourceDirectory}</directory>
+				<includes>
+					<include>**/*.java</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>${project.build.resourceDirectory}</directory>
+				<includes>
+					<include>**/*</include>
+				</includes>
+			</resource>
+		</resources>
+    	<sourceDirectory>src/main/java</sourceDirectory>
+		<plugins>
+			<plugin>
+        		<artifactId>maven-war-plugin</artifactId>
+        		<version>2.6</version>
+        		<configuration>
+          			<failOnMissingWebXml>false</failOnMissingWebXml>
+					<webResources>
+						<resource>
+							<directory>src/main/webapp</directory>
+						</resource>
+					</webResources>
+        		</configuration>
+      		</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.5.1</version>
+				<configuration>
+					<source>${javaVersion}</source>
+					<target>${javaVersion}</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.eclipse.rdf4j</groupId>
+			<artifactId>rdf4j-runtime</artifactId>
+			<version>${rdf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+	   	 	<groupId>com.sun.jersey</groupId>
+	    	<artifactId>jersey-json</artifactId>
+	   	 	<version>${jersey.version}</version>
+		</dependency>
+	</dependencies>
+</project>
